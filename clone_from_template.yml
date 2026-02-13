@@ -26,7 +26,8 @@
       community.vmware.vmware_guest:
         hostname: "{{ vcenter_hostname }}"
         username: "{{ vcenter_username }}"
-        password: "{{ vcenter_password }}"
+        password: "{{ vcenter_password | default(lookup('env','VCENTER_PASSWORD')) }}"
+
         validate_certs: "{{ validate_certs_bool }}"
 
         datacenter: "{{ dc_name }}"
