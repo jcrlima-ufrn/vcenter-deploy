@@ -7,40 +7,40 @@
 
   vars:
     validate_certs_bool: "{{ vcenter_validate_certs | default('false') | bool }}"
+    vcenter_password_effective: "{{ vcenter_password | default(lookup('env', 'VCENTER_PASSWORD')) }}"
 
   tasks:
     - name: Validar variáveis obrigatórias
-  ansible.builtin.assert:
-    that:
-      - vcenter_hostname is defined
-      - vcenter_username is defined
-      - (vcenter_password is defined) or ((lookup('env','VCENTER_PASSWORD') | default('')) | length > 0)
-      - dc_name is defined
-      - cluster_name is defined
-      - template_name is defined
-      - vm_name is defined
-      - datastore is defined
-      - network_name is defined
-    fail_msg: >
-      Faltam variáveis no Semaphore.
-      Defina vcenter_hostname, vcenter_username, dc_name, cluster_name, template_name, vm_name, datastore, network_name.
-      E defina a senha como vcenter_password (extra var) OU VCENTER_PASSWORD (environment variable).
-      
+      ansible.builtin.assert:
+        that:
+          - vcenter_hostname is defined
+          - vcenter_username is defined
+          - (vcenter_password_effective | default('') | length) > 0
+          - dc_name is defined
+          - cluster_name is defined
+          - template_name is defined
+          - vm_name is defined
+          - datastore is defined
+          - network_name is defined
+          - vm_ip is defined
+          - vm_netmask is defined
+          - vm_gw is defined
+        fail_msg: "Faltam variáveis. Defina vcenter_hostname, vcenter_username, dc_name, cluster_name, template_name, vm_name, datastore, network_name, vm_ip, vm_netmask, vm_gw e a senha via vcenter_password (extra var) ou VCENTER_PASSWORD (env var)."
+
     - name: Clonar VM do template
       community.vmware.vmware_guest:
         hostname: "{{ vcenter_hostname }}"
         username: "{{ vcenter_username }}"
-        password: "{{ vcenter_password | default(lookup('env','VCENTER_PASSWORD')) }}"
-
+        password: "{{ vcenter_password_effective }}"
         validate_certs: "{{ validate_certs_bool }}"
 
         datacenter: "{{ dc_name }}"
+        cluster: "{{ cluster_name }}"
         folder: "{{ folder | default(omit) }}"
+        datastore: "{{ datastore }}"
+
         name: "{{ vm_name }}"
         template: "{{ template_name }}"
-
-        cluster: "{{ cluster_name | default(omit) }}"
-        datastore: "{{ datastore }}"
 
         state: poweredon
         wait_for_ip_address: true
@@ -55,14 +55,15 @@
             ip: "{{ vm_ip }}"
             netmask: "{{ vm_netmask }}"
             gateway: "{{ vm_gw }}"
-            dns_servers: "{{ (vm_dns | default('') ).split(',') if (vm_dns | default(''))|length > 0 else omit }}"
+            dns_servers: "{{ (vm_dns | default('') ).split(',') | map('trim') | list if (vm_dns | default(''))|length > 0 else omit }}"
 
         customization:
           hostname: "{{ vm_name }}"
+          domain: "{{ vm_domain | default(omit) }}"
       register: vmdeploy
 
-    - name: Mostrar resumo
+    - name: Mostrar resultado
       ansible.builtin.debug:
         msg:
-          - "VM criada/atualizada: {{ vm_name }}"
-          - "IP: {{ vmdeploy.instance.ipv4 | default('não retornado') }}"
+          - "VM: {{ vm_name }}"
+          - "IP reportado: {{ vmdeploy.instance.ipv4 | default('não retornado') }}"
