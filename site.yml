@@ -10,7 +10,7 @@
       community.vmware.vmware_datacenter_info:
         hostname: "{{ vcenter_hostname }}"
         username: "{{ vcenter_username }}"
-        password: "{{ vcenter_password }}"
+        password:  "{{ lookup('env', 'VCENTER_PASSWORD') }}"
         validate_certs: "{{ vcenter_validate_certs | default(false) | bool }}"
       register: dc
 
