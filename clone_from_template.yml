@@ -10,17 +10,18 @@
 
   tasks:
     - name: Validar variáveis obrigatórias
-      ansible.builtin.assert:
-        that:
-          - vcenter_hostname is defined
-          - vcenter_username is defined
-          - (vcenter_password is defined) or ((lookup('env','VCENTER_PASSWORD') | default('')) | length > 0)
-          - dc_name is defined
-          - template_name is defined
-          - vm_name is defined
-          - datastore is defined
-          - network_name is defined
-       fail_msg: >
+  ansible.builtin.assert:
+    that:
+      - vcenter_hostname is defined
+      - vcenter_username is defined
+      - (vcenter_password is defined) or ((lookup('env','VCENTER_PASSWORD') | default('')) | length > 0)
+      - dc_name is defined
+      - cluster_name is defined
+      - template_name is defined
+      - vm_name is defined
+      - datastore is defined
+      - network_name is defined
+    fail_msg: >
       Faltam variáveis no Semaphore.
       Defina vcenter_hostname, vcenter_username, dc_name, cluster_name, template_name, vm_name, datastore, network_name.
       E defina a senha como vcenter_password (extra var) OU VCENTER_PASSWORD (environment variable).
