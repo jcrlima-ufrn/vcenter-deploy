@@ -7,7 +7,7 @@
   tasks:
     - name: Listar datacenters
       community.vmware.vmware_datacenter_info:
-        hostname: "{{ vcenter_hostname }}"
+        hostname: "{{ vcenter3.info.ufrn.br }}"
         username: "{{ vcenter_username }}"
         password: "{{ vcenter_password }}"
         validate_certs: false
